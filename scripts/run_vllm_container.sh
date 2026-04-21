@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HOST_WORKSPACE="$(cd "$SCRIPT_DIR/.." && pwd)"
+CONTAINER_WORKSPACE="${CONTAINER_WORKSPACE:-/workspace}"
+
+IMAGE="${IMAGE:-vllm/vllm-openai:nightly}"
+CONTAINER_NAME="${CONTAINER_NAME:-gemma4-google-fp8-dflash}"
+ENTRYPOINT_SCRIPT="${ENTRYPOINT_SCRIPT:-$CONTAINER_WORKSPACE/scripts/serve_gemma4_google_fp8_dflash.sh}"
+RUN_ID="${RUN_ID:-${CONTAINER_NAME}-$(date +%Y%m%d_%H%M%S)}"
+HF_CACHE_DIR="${HF_CACHE_DIR:-$HOME/.cache/huggingface}"
+HOST_LOG_DIR="${HOST_LOG_DIR:-$HOST_WORKSPACE/logs}"
+LOG_PATH_IN_CONTAINER="${LOG_PATH_IN_CONTAINER:-$CONTAINER_WORKSPACE/logs/$RUN_ID.log}"
+
+mkdir -p "$HOST_LOG_DIR"
+mkdir -p "$HF_CACHE_DIR"
+
+MODEL="${MODEL:-}"
+DRAFT_MODEL="${DRAFT_MODEL:-}"
+HOST="${HOST:-0.0.0.0}"
+PORT="${PORT:-8001}"
+SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-google/gemma-4-31B-it-vllm-fp8-dflash-16k}"
+MAX_MODEL_LEN="${MAX_MODEL_LEN:-16384}"
+GPU_MEMORY_UTILIZATION="${GPU_MEMORY_UTILIZATION:-0.80}"
+TENSOR_PARALLEL_SIZE="${TENSOR_PARALLEL_SIZE:-1}"
+NUM_SPECULATIVE_TOKENS="${NUM_SPECULATIVE_TOKENS:-8}"
+MAX_NUM_BATCHED_TOKENS="${MAX_NUM_BATCHED_TOKENS:-16384}"
+QUANTIZATION="${QUANTIZATION:-fp8}"
+TEXT_ONLY="${TEXT_ONLY:-1}"
+VLLM_DISABLE_COMPILE_CACHE="${VLLM_DISABLE_COMPILE_CACHE:-1}"
+SPECULATIVE_CONFIG="${SPECULATIVE_CONFIG:-}"
+
+docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+
+launch_cmd="cd $CONTAINER_WORKSPACE && bash $ENTRYPOINT_SCRIPT 2>&1 | tee $LOG_PATH_IN_CONTAINER"
+
+docker run -d \
+  --name "$CONTAINER_NAME" \
+  --entrypoint bash \
+  --gpus all \
+  --network host \
+  --ipc host \
+  --ulimit memlock=-1 \
+  --ulimit stack=67108864 \
+  -e MODEL="$MODEL" \
+  -e DRAFT_MODEL="$DRAFT_MODEL" \
+  -e HOST="$HOST" \
+  -e PORT="$PORT" \
+  -e SERVED_MODEL_NAME="$SERVED_MODEL_NAME" \
+  -e MAX_MODEL_LEN="$MAX_MODEL_LEN" \
+  -e GPU_MEMORY_UTILIZATION="$GPU_MEMORY_UTILIZATION" \
+  -e TENSOR_PARALLEL_SIZE="$TENSOR_PARALLEL_SIZE" \
+  -e NUM_SPECULATIVE_TOKENS="$NUM_SPECULATIVE_TOKENS" \
+  -e MAX_NUM_BATCHED_TOKENS="$MAX_NUM_BATCHED_TOKENS" \
+  -e QUANTIZATION="$QUANTIZATION" \
+  -e TEXT_ONLY="$TEXT_ONLY" \
+  -e VLLM_DISABLE_COMPILE_CACHE="$VLLM_DISABLE_COMPILE_CACHE" \
+  -e SPECULATIVE_CONFIG="$SPECULATIVE_CONFIG" \
+  -v "$HOST_WORKSPACE:$CONTAINER_WORKSPACE" \
+  -v "$HF_CACHE_DIR:/root/.cache/huggingface" \
+  "$IMAGE" \
+  -lc "$launch_cmd" >/dev/null
+
+echo "container=$CONTAINER_NAME"
+echo "image=$IMAGE"
+echo "endpoint=http://127.0.0.1:$PORT/v1/models"
+echo "logs=$HOST_LOG_DIR"
