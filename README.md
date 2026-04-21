@@ -1,6 +1,12 @@
 # Gemma 4 + Red Hat DFlash on DGX Spark GB10
 
-This bundle contains the minimum files we used to bring up `RedHatAI/gemma-4-31B-it-speculator.dflash` against `google/gemma-4-31B-it` on a single DGX Spark / GB10 node with `vLLM` nightly.
+This repository documents a working single-node bring-up of `RedHatAI/gemma-4-31B-it-speculator.dflash` against `google/gemma-4-31B-it` on a DGX Spark / GB10 using `vLLM` nightly.
+
+It is aimed at users who want to:
+
+- reproduce the exact serve path that was validated
+- understand the runtime patches that made it work
+- compare baseline Gemma 4 FP8 serving against DFlash on the same node
 
 It is intentionally small and sanitized:
 
@@ -9,10 +15,14 @@ It is intentionally small and sanitized:
 - no personal paths
 - no local cluster references
 
+## Attribution
+
+This repository, the scripts in it, and the initial documentation were assembled by OpenAI Codex from a live working environment, then reviewed and published by the repository owner.
+
 ## What Is Included
 
 - `scripts/patch_vllm_gb10_gemma4_dflash_runtime.py`
-  Runtime patcher for the current `vLLM` nightly path we used.
+  Runtime patcher for the current `vLLM` nightly path validated here.
 - `scripts/serve_gemma4_google_fp8.sh`
   Baseline verifier-only serve script.
 - `scripts/serve_gemma4_google_fp8_dflash.sh`
@@ -26,7 +36,7 @@ It is intentionally small and sanitized:
 
 ## Verified Environment
 
-This is the environment we actually validated:
+The following environment was validated directly:
 
 - Hardware: single NVIDIA DGX Spark / GB10
 - Container image: `vllm/vllm-openai:nightly`
@@ -40,7 +50,7 @@ This is the environment we actually validated:
 
 ## Why The Patch Is Needed
 
-The working path was not a stock `vllm serve` invocation.
+The working path is not a stock `vllm serve` invocation.
 
 The three runtime changes that mattered were:
 
@@ -55,7 +65,14 @@ The practical result is a split-backend setup:
 
 ## Quick Start
 
-Pull the nightly image first:
+Clone the repository and enter it:
+
+```bash
+git clone https://github.com/meanaverage/gemma4-dflash-spark-vllm.git
+cd gemma4-dflash-spark-vllm
+```
+
+Pull the nightly image:
 
 ```bash
 docker pull vllm/vllm-openai:nightly
@@ -64,8 +81,6 @@ docker pull vllm/vllm-openai:nightly
 Start the baseline verifier on port `8002`:
 
 ```bash
-cd publish/gemma4-dflash-spark-vllm
-
 CONTAINER_NAME=gemma4-google-fp8 \
 PORT=8002 \
 SERVED_MODEL_NAME=google/gemma-4-31B-it-vllm-fp8-16k \
@@ -90,7 +105,7 @@ curl http://127.0.0.1:8001/v1/models
 curl http://127.0.0.1:8002/v1/models
 ```
 
-Run the same `mt-bench` harness we used:
+Run the same `mt-bench` harness used for the comparison:
 
 ```bash
 CONTAINER_NAME=gemma4-google-fp8 \
@@ -145,22 +160,3 @@ This repository is licensed under `Apache-2.0`. See `LICENSE`.
 That license applies to the code and documentation in this repository only.
 
 Model weights, container images, and upstream projects referenced here remain under their own licenses and terms.
-
-## Suggested Publish Flow
-
-Initialize a repo in this directory:
-
-```bash
-cd publish/gemma4-dflash-spark-vllm
-git init
-git add .
-git commit -m "Initial Gemma 4 DFlash Spark GB10 bring-up bundle"
-```
-
-Then create a GitHub repo and add the remote:
-
-```bash
-git remote add origin <your-github-repo-url>
-git branch -M main
-git push -u origin main
-```

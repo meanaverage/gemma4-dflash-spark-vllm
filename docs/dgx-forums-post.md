@@ -1,4 +1,10 @@
-Posting a working DGX Spark / GB10 path for `RedHatAI/gemma-4-31B-it-speculator.dflash`, since the successful setup on our side was not the stock path and took a few runtime patches.
+Posting a working DGX Spark / GB10 path for `RedHatAI/gemma-4-31B-it-speculator.dflash`, since the successful setup here was not the stock path and took a few runtime patches.
+
+The sanitized repro bundle is here:
+
+- https://github.com/meanaverage/gemma4-dflash-spark-vllm
+
+That bundle and its documentation were assembled by OpenAI Codex from the working environment, then reviewed and published by the repository owner.
 
 Test rig
 
@@ -67,4 +73,4 @@ Against a plain non-DFlash baseline on the same verifier and same harness:
 
 So the short version is: this draft does run on DGX Spark / GB10 with the stock Google verifier, but today it is not a zero-patch path in `vLLM` nightly. The key was splitting verifier and draft attention backends instead of trying to drive both through one backend.
 
-I pulled the minimum scripts and notes into a small sanitized bundle so others can reproduce it without any cluster-specific details. I can share the repo link and exact launchers if that is useful.
+The exact launchers, runtime patcher, and benchmark helper are in the repo above so others can reproduce the same path without any cluster-specific details.
