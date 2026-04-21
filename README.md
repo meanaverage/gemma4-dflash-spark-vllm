@@ -137,7 +137,14 @@ That is roughly a `2.79x` throughput uplift over the baseline in this specific s
 - This bundle documents the verified `google/gemma-4-31B-it` verifier path only.
 - The validated path here is text-only.
 - The results above are for single-node `TP=1` and should not be generalized beyond that setup without retesting.
-- No license file is included yet. Pick one before publishing the repo publicly.
+
+## License
+
+This repository is licensed under `Apache-2.0`. See `LICENSE`.
+
+That license applies to the code and documentation in this repository only.
+
+Model weights, container images, and upstream projects referenced here remain under their own licenses and terms.
 
 ## Suggested Publish Flow
 
