@@ -8,13 +8,6 @@ It is aimed at users who want to:
 - understand the runtime patches that made it work
 - compare baseline Gemma 4 FP8 serving against DFlash on the same node
 
-It is intentionally small and sanitized:
-
-- no hostnames
-- no usernames
-- no personal paths
-- no local cluster references
-
 ## Attribution
 
 This repository, the scripts in it, and the initial documentation were assembled by OpenAI Codex from a live working environment, then reviewed and published by the repository owner.
