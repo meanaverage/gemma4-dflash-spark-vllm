@@ -7,10 +7,7 @@ This repository documents a working single-node bring-up of `RedHatAI/gemma-4-31
 If you are on a DGX Spark / GB10 and just want a runnable container, the shortest path is the published image:
 
 ```bash
-IMAGE=ghcr.io/meanaverage/gemma4-dflash-spark-vllm:latest
-HF_CACHE_DIR=${HF_CACHE_DIR:-$HOME/.cache/huggingface}
-
-mkdir -p "$HF_CACHE_DIR"
+mkdir -p "$HOME/.cache/huggingface"
 ```
 
 Run the DFlash path directly:
@@ -23,10 +20,10 @@ docker run --rm -d \
   --ipc host \
   --ulimit memlock=-1 \
   --ulimit stack=67108864 \
-  -v "$HF_CACHE_DIR:/root/.cache/huggingface" \
+  -v "$HOME/.cache/huggingface:/root/.cache/huggingface" \
   -e PORT=8001 \
   -e SERVED_MODEL_NAME=google/gemma-4-31B-it-vllm-fp8-dflash-16k \
-  "$IMAGE" dflash
+  ghcr.io/meanaverage/gemma4-dflash-spark-vllm:latest dflash
 ```
 
 Run the baseline verifier path directly:
@@ -39,10 +36,10 @@ docker run --rm -d \
   --ipc host \
   --ulimit memlock=-1 \
   --ulimit stack=67108864 \
-  -v "$HF_CACHE_DIR:/root/.cache/huggingface" \
+  -v "$HOME/.cache/huggingface:/root/.cache/huggingface" \
   -e PORT=8002 \
   -e SERVED_MODEL_NAME=google/gemma-4-31B-it-vllm-fp8-16k \
-  "$IMAGE" baseline
+  ghcr.io/meanaverage/gemma4-dflash-spark-vllm:latest baseline
 ```
 
 Check that the servers are up:
@@ -63,7 +60,7 @@ docker run --rm \
   -e BASE_URL=http://127.0.0.1:8002 \
   -e MODEL=google/gemma-4-31B-it-vllm-fp8-16k \
   -e RESULT_DIR=/workspace/results/baseline \
-  "$IMAGE" bench
+  ghcr.io/meanaverage/gemma4-dflash-spark-vllm:latest bench
 
 docker run --rm \
   --network host \
@@ -71,7 +68,7 @@ docker run --rm \
   -e BASE_URL=http://127.0.0.1:8001 \
   -e MODEL=google/gemma-4-31B-it-vllm-fp8-dflash-16k \
   -e RESULT_DIR=/workspace/results/dflash \
-  "$IMAGE" bench
+  ghcr.io/meanaverage/gemma4-dflash-spark-vllm:latest bench
 ```
 
 ## Repository Scope
