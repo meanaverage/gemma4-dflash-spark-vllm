@@ -3,7 +3,6 @@ FROM vllm/vllm-openai:nightly
 WORKDIR /opt/gemma4-dflash-spark-vllm
 
 COPY LICENSE README.md ./
-COPY docs ./docs
 COPY docker ./docker
 COPY scripts ./scripts
 

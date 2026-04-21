@@ -102,8 +102,6 @@ docker run --rm \
   Generic Docker launcher for the two serve scripts.
 - `scripts/bench_mtbench.sh`
   Simple `mt-bench` helper against a running container.
-- `docs/dgx-forums-post.md`
-  Forum-ready writeup you can adapt for NVIDIA DGX forums.
 
 ## Verified Environment
 
