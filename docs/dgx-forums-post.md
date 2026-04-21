@@ -4,6 +4,8 @@ The sanitized repro bundle is here:
 
 - https://github.com/meanaverage/gemma4-dflash-spark-vllm
 
+There is also a thin published container path in that repo so DGX users can run the validated setup directly with `docker run` instead of cloning and wiring the scripts manually.
+
 That bundle and its documentation were assembled by OpenAI Codex from the working environment, then reviewed and published by the repository owner.
 
 Test rig

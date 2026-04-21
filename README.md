@@ -19,14 +19,92 @@ It is intentionally small and sanitized:
 
 This repository, the scripts in it, and the initial documentation were assembled by OpenAI Codex from a live working environment, then reviewed and published by the repository owner.
 
+## Fastest Path
+
+If you are on a DGX Spark / GB10 and just want a runnable container, the shortest path is the published image:
+
+```bash
+IMAGE=ghcr.io/meanaverage/gemma4-dflash-spark-vllm:latest
+HF_CACHE_DIR=${HF_CACHE_DIR:-$HOME/.cache/huggingface}
+
+mkdir -p "$HF_CACHE_DIR"
+```
+
+Run the DFlash path directly:
+
+```bash
+docker run --rm -d \
+  --name gemma4-google-fp8-dflash \
+  --gpus all \
+  --network host \
+  --ipc host \
+  --ulimit memlock=-1 \
+  --ulimit stack=67108864 \
+  -v "$HF_CACHE_DIR:/root/.cache/huggingface" \
+  -e PORT=8001 \
+  -e SERVED_MODEL_NAME=google/gemma-4-31B-it-vllm-fp8-dflash-16k \
+  "$IMAGE" dflash
+```
+
+Run the baseline verifier path directly:
+
+```bash
+docker run --rm -d \
+  --name gemma4-google-fp8 \
+  --gpus all \
+  --network host \
+  --ipc host \
+  --ulimit memlock=-1 \
+  --ulimit stack=67108864 \
+  -v "$HF_CACHE_DIR:/root/.cache/huggingface" \
+  -e PORT=8002 \
+  -e SERVED_MODEL_NAME=google/gemma-4-31B-it-vllm-fp8-16k \
+  "$IMAGE" baseline
+```
+
+Check that the servers are up:
+
+```bash
+curl http://127.0.0.1:8001/v1/models
+curl http://127.0.0.1:8002/v1/models
+```
+
+Run the same `mt-bench` comparison from the image itself:
+
+```bash
+mkdir -p results
+
+docker run --rm \
+  --network host \
+  -v "$(pwd)/results:/workspace/results" \
+  -e BASE_URL=http://127.0.0.1:8002 \
+  -e MODEL=google/gemma-4-31B-it-vllm-fp8-16k \
+  -e RESULT_DIR=/workspace/results/baseline \
+  "$IMAGE" bench
+
+docker run --rm \
+  --network host \
+  -v "$(pwd)/results:/workspace/results" \
+  -e BASE_URL=http://127.0.0.1:8001 \
+  -e MODEL=google/gemma-4-31B-it-vllm-fp8-dflash-16k \
+  -e RESULT_DIR=/workspace/results/dflash \
+  "$IMAGE" bench
+```
+
 ## What Is Included
 
+- `Dockerfile`
+  Thin image on top of `vllm/vllm-openai:nightly` with the patcher and entrypoint baked in.
+- `docker/entrypoint.sh`
+  Mode-based container entrypoint for `baseline`, `dflash`, and `bench`.
 - `scripts/patch_vllm_gb10_gemma4_dflash_runtime.py`
   Runtime patcher for the current `vLLM` nightly path validated here.
 - `scripts/serve_gemma4_google_fp8.sh`
   Baseline verifier-only serve script.
 - `scripts/serve_gemma4_google_fp8_dflash.sh`
   DFlash serve script using the Red Hat draft model.
+- `scripts/bench_mtbench_direct.sh`
+  In-container `mt-bench` helper used by the image `bench` mode.
 - `scripts/run_vllm_container.sh`
   Generic Docker launcher for the two serve scripts.
 - `scripts/bench_mtbench.sh`
@@ -63,7 +141,7 @@ The practical result is a split-backend setup:
 - Gemma 4 verifier stays on Triton
 - DFlash draft attention runs on FlashAttention
 
-## Quick Start
+## Run From Source Instead
 
 Clone the repository and enter it:
 
