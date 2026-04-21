@@ -2,17 +2,7 @@
 
 This repository documents a working single-node bring-up of `RedHatAI/gemma-4-31B-it-speculator.dflash` against `google/gemma-4-31B-it` on a DGX Spark / GB10 using `vLLM` nightly.
 
-It is aimed at users who want to:
-
-- reproduce the exact serve path that was validated
-- understand the runtime patches that made it work
-- compare baseline Gemma 4 FP8 serving against DFlash on the same node
-
-## Attribution
-
-This repository, the scripts in it, and the initial documentation were assembled by OpenAI Codex from a live working environment, then reviewed and published by the repository owner.
-
-## Fastest Path
+## Quick Start: `docker run`
 
 If you are on a DGX Spark / GB10 and just want a runnable container, the shortest path is the published image:
 
@@ -83,6 +73,18 @@ docker run --rm \
   -e RESULT_DIR=/workspace/results/dflash \
   "$IMAGE" bench
 ```
+
+## Repository Scope
+
+This repository is aimed at users who want to:
+
+- reproduce the exact serve path that was validated
+- understand the runtime patches that made it work
+- compare baseline Gemma 4 FP8 serving against DFlash on the same node
+
+## Attribution
+
+This repository, the scripts in it, and the initial documentation were assembled by OpenAI Codex from a live working environment, then reviewed and published by the repository owner.
 
 ## What Is Included
 
